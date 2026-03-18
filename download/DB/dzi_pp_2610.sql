@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1
--- Време на генериране: 10 фев 2026 в 23:53
+-- Време на генериране: 18 март 2026 в 09:13
 -- Версия на сървъра: 10.4.32-MariaDB
 -- Версия на PHP: 8.2.12
 
@@ -85,7 +85,11 @@ INSERT INTO `auth_permission` (`id`, `name`, `content_type_id`, `codename`) VALU
 (21, 'Can add session', 6, 'add_session'),
 (22, 'Can change session', 6, 'change_session'),
 (23, 'Can delete session', 6, 'delete_session'),
-(24, 'Can view session', 6, 'view_session');
+(24, 'Can view session', 6, 'view_session'),
+(25, 'Can add photo', 7, 'add_photo'),
+(26, 'Can change photo', 7, 'change_photo'),
+(27, 'Can delete photo', 7, 'delete_photo'),
+(28, 'Can view photo', 7, 'view_photo');
 
 -- --------------------------------------------------------
 
@@ -177,6 +181,7 @@ INSERT INTO `django_content_type` (`id`, `app_label`, `model`) VALUES
 (2, 'auth', 'permission'),
 (4, 'auth', 'user'),
 (5, 'contenttypes', 'contenttype'),
+(7, 'main', 'photo'),
 (6, 'sessions', 'session');
 
 -- --------------------------------------------------------
@@ -214,7 +219,8 @@ INSERT INTO `django_migrations` (`id`, `app`, `name`, `applied`) VALUES
 (15, 'auth', '0010_alter_group_name_max_length', '2026-02-10 22:52:29.866511'),
 (16, 'auth', '0011_update_proxy_permissions', '2026-02-10 22:52:29.874038'),
 (17, 'auth', '0012_alter_user_first_name_max_length', '2026-02-10 22:52:29.885027'),
-(18, 'sessions', '0001_initial', '2026-02-10 22:52:29.908034');
+(18, 'sessions', '0001_initial', '2026-02-10 22:52:29.908034'),
+(19, 'main', '0001_initial', '2026-03-18 08:10:49.087280');
 
 -- --------------------------------------------------------
 
@@ -226,6 +232,23 @@ CREATE TABLE `django_session` (
   `session_key` varchar(40) NOT NULL,
   `session_data` longtext NOT NULL,
   `expire_date` datetime(6) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Структура на таблица `main_photo`
+--
+
+CREATE TABLE `main_photo` (
+  `id` bigint(20) NOT NULL,
+  `image` varchar(100) NOT NULL,
+  `filename` varchar(255) NOT NULL,
+  `datetime_taken` datetime(6) DEFAULT NULL,
+  `latitude` decimal(9,6) DEFAULT NULL,
+  `longitude` decimal(9,6) DEFAULT NULL,
+  `has_gps` tinyint(1) NOT NULL,
+  `uploaded_at` datetime(6) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -306,6 +329,12 @@ ALTER TABLE `django_session`
   ADD KEY `django_session_expire_date_a5c62663` (`expire_date`);
 
 --
+-- Индекси за таблица `main_photo`
+--
+ALTER TABLE `main_photo`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -325,7 +354,7 @@ ALTER TABLE `auth_group_permissions`
 -- AUTO_INCREMENT for table `auth_permission`
 --
 ALTER TABLE `auth_permission`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `auth_user`
@@ -355,13 +384,19 @@ ALTER TABLE `django_admin_log`
 -- AUTO_INCREMENT for table `django_content_type`
 --
 ALTER TABLE `django_content_type`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `django_migrations`
 --
 ALTER TABLE `django_migrations`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT for table `main_photo`
+--
+ALTER TABLE `main_photo`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
 --
 -- Ограничения за дъмпнати таблици
