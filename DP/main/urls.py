@@ -1,22 +1,15 @@
-"""
-URL configuration for DP project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-from django.contrib import admin
 from django.urls import path
+from .views import *
 
+# По-късно ще добавим и път за самия HTML файл (фронтенда),
+# но засега регистрираме само API Endpoint-ите
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('old', index, name='home'),
+    path('', IndexView.as_view(), name='index'), # Това зарежда фронтенда
+    path('api/photos/upload/', PhotoUploadView.as_view(), name='api-photo-upload'),
+    path('api/photos/', PhotoListView.as_view(), name='api-photo-list'),
+    path('api/photos/<int:pk>/', PhotoDeleteView.as_view(), name='api-photo-delete'),
+    path('api/photos/clear/', ProjectClearView.as_view(), name='api-project-clear'),
 ]
+
+

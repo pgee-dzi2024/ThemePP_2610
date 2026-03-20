@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дипломен Проект - Снимки с GPS</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        #map { height: 500px; width: 100%; border-radius: 8px; border: 1px solid #ccc; }
+        .thumbnail { width: 100px; height: auto; border-radius: 4px; }
+        .popup-img { width: 150px; height: auto; display: block; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div id="app" class="container mt-4">
+        <h2 class="mb-4">Управление на снимки и локации</h2>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h5>Качване на снимки</h5>
+                    <!-- Използваме multiple за повече от един файл -->
+                    <input type="file" ref="fileInput" multiple accept="image/*" class="form-control mb-2" @change="uploadPhotos">
+                    <button class="btn btn-danger mt-2" @click="clearProject" :disabled="photos.length === 0">Изчисти целия проект</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Списък със снимки -->
+            <div class="col-md-5">
+                <h5>Списък със снимки</h5>
+                <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Снимка</th>
+                                <th>Име</th>
+                                <th>GPS Статус</th>
+                                <th>Действие</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="photo in photos" :key="photo.id">
+                                <td>
+                                    <img :src="photo.image" class="thumbnail" alt="Снимка">
+                                </td>
+                                <td>
+                                    [[ photo.filename ]]<br>
+                                    <small class="text-muted" v-if="photo.datetime_taken">[[
+                                        formatDate(photo.datetime_taken) ]]</small>
+                                </td>
+                                <td>
+                                    <span v-if="photo.has_gps" class="badge bg-success">Има GPS</span>
+                                    <span v-else class="badge bg-warning text-dark">Няма GPS</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-danger" @click="deletePhoto(photo.id)">Изтрий</button>
+                                </td>
+                            </tr>
+                            <tr v-if="photos.length === 0">
+                                <td colspan="4" class="text-center">Няма качени снимки.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Карта -->
+            <div class="col-md-7">
+                <h5>Карта</h5>
+                <div id="map"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3, Axios, Leaflet -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            delimiters: ['[[', ']]'],
+            data() {
+                return {
+                    photos: [],
+                    map: null,
+                    markers: [] // Пазим маркерите, за да ги трием при обновяване
+                }
+            },
+            mounted() {
+                this.initMap();
+                this.fetchPhotos();
+            },
+            methods: {
+                initMap() {
+                    // Инициализация на картата, центрирана към България
+                    this.map = L.map('map').setView([42.7339, 25.4858], 7);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors'
+                    }).addTo(this.map);
+                },
+                updateMapMarkers() {
+                    // Изчистване на старите маркери
+                    this.markers.forEach(marker => this.map.removeLayer(marker));
+                    this.markers = [];
+
+                    // Добавяне на нови маркери за снимките с GPS
+                    this.photos.forEach(photo => {
+                        if (photo.has_gps && photo.latitude && photo.longitude) {
+                            let marker = L.marker([photo.latitude, photo.longitude]).addTo(this.map);
+
+                            // Съдържание на изскачащия прозорец (Popup)
+                            let popupContent = `
+                                <b>${photo.filename}</b><br>
+                                ${photo.datetime_taken ? this.formatDate(photo.datetime_taken) : 'Няма дата'}<br>
+                                <img src="${photo.image}" class="popup-img">
+                            `;
+                            marker.bindPopup(popupContent);
+                            this.markers.push(marker);
+                        }
+                    });
+                },
+                async fetchPhotos() {
+                    try {
+                        const response = await axios.get('/api/photos/');
+                        this.photos = response.data;
+                        this.updateMapMarkers();
+                    } catch (error) {
+                        console.error("Грешка при зареждане на снимките:", error);
+                    }
+                },
+                async uploadPhotos(event) {
+                    const files = event.target.files;
+                    if (files.length === 0) return;
+
+                    let formData = new FormData();
+                    for (let i = 0; i < files.length; i++) {
+                        formData.append('images', files[i]);
+                    }
+
+                    try {
+                        await axios.post('/api/photos/upload/', formData, {
+                            headers: { 'Content-Type': 'multipart/form-data' }
+                        });
+                        this.$refs.fileInput.value = ''; // Изчистване на input-a
+                        this.fetchPhotos(); // Презареждане на списъка и картата
+                    } catch (error) {
+                        console.error("Грешка при качване:", error);
+                        alert("Възникна грешка при качването на файловете.");
+                    }
+                },
+                async deletePhoto(id) {
+                    if(confirm("Сигурни ли сте, че искате да изтриете тази снимка?")) {
+                        try {
+                            await axios.delete(`/api/photos/${id}/`);
+                            this.fetchPhotos();
+                        } catch (error) {
+                            console.error("Грешка при изтриване:", error);
+                        }
+                    }
+                },
+                async clearProject() {
+                    if(confirm("ВНИМАНИЕ! Сигурни ли сте, че искате да изтриете ВСИЧКИ снимки?")) {
+                        try {
+                            await axios.delete('/api/photos/clear/');
+                            this.fetchPhotos();
+                        } catch (error) {
+                            console.error("Грешка при изчистване:", error);
+                        }
+                    }
+                },
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    return date.toLocaleString('bg-BG');
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
