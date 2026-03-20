@@ -1,11 +1,15 @@
 from django.urls import path
 from .views import *
 
-from django.conf import settings
-from django.conf.urls.static import static
-
+# По-късно ще добавим и път за самия HTML файл (фронтенда),
+# но засега регистрираме само API Endpoint-ите
 urlpatterns = [
-    path('', index, name='home'),
+    path('old', index, name='home'),
+    path('', IndexView.as_view(), name='index'), # Това зарежда фронтенда
+    path('api/photos/upload/', PhotoUploadView.as_view(), name='api-photo-upload'),
+    path('api/photos/', PhotoListView.as_view(), name='api-photo-list'),
+    path('api/photos/<int:pk>/', PhotoDeleteView.as_view(), name='api-photo-delete'),
+    path('api/photos/clear/', ProjectClearView.as_view(), name='api-project-clear'),
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
