@@ -4,7 +4,7 @@ from .views import *
 # По-късно ще добавим и път за самия HTML файл (фронтенда),
 # но засега регистрираме само API Endpoint-ите
 urlpatterns = [
-    path('old', index, name='home'),
+    path('old', IndexViewOld.as_view(), name='home_old'),
     path('', IndexView.as_view(), name='index'), # Това зарежда фронтенда
     path('api/photos/upload/', PhotoUploadView.as_view(), name='api-photo-upload'),
     path('api/photos/', PhotoListView.as_view(), name='api-photo-list'),
