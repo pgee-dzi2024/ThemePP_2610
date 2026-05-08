@@ -14,6 +14,9 @@ from django.views.generic import TemplateView
 class IndexView(TemplateView):
     template_name = 'main\index.html'
 
+class IndexViewOld(TemplateView):
+    template_name = 'main\index_old.html'
+
 class PhotoUploadView(APIView):
     def post(self, request, *args, **kwargs):
         # Взимаме списъка с качени файлове от ключа 'images'
