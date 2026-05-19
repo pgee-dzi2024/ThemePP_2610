@@ -1,4 +1,4 @@
-from PIL import Image, ExifTags
+   from PIL import Image, ExifTags
 
 
 def get_decimal_from_dms(dms, ref):
